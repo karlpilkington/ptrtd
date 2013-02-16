@@ -1,0 +1,86 @@
+ptrtd - a Portable Transport Relay Translator Daemon for IPv6
+
+ptrtd is a TRT, as described by RFC 3142, used to translate TCP sessions
+between IPv6 and IPv4.  It is similar in spirit to the faith/faithd TRT
+implemented by the KAME project, but it is not tied to any particular IPv6
+stack as faith is.  ptrtd uses a self-contained IPv6 stack to converse with
+IPv6 nodes, and uses the standard kernel-based TCP/IP stack of the host
+system to converse with IPv4 systems.  At the moment, ptrtd only supports
+TCP sessions.
+
+******  WARNING  ******
+
+ptrtd is still in development stages, and is not ready for production use
+yet!  It certainly contains bugs that may cause it to be unstable and
+crash, and may contain security holes that can be used to compromise the
+host system.  Malformed packets will cause unexpected results.
+
+DO NOT USE PTRTD EXCEPT IN AN ISOLATED NETWORK!  YOU HAVE BEEN WARNED!
+
+**** end of warning ****
+
+
+HOW PTRTD WORKS:
+
+As described in RFC 3142, a TRT allows IPv6 hosts to contact IPv4 hosts by
+providing a "fake" IPv6 address for each IPv4 host.  These fake addresses
+are actually routed to the TRT system, which terminates the connection as
+if it were the real destination.  The TRT then establishes a secondary TCP
+session with IPv4 to the real destination, and passes all traffic between
+the two connections.
+
+Usually, IPv6 hosts are made aware of these fake addresses by using a DNS
+proxy which translates IPv4 addresses into IPv6 addresses in DNS replies.
+If the number of IPv4 hosts is small, the fake addresses may instead be
+placed into real DNS zones.  Thus, to allow IPv6 hosts to access the entire
+IPv4 address space, a package such as totd, which is available at:
+
+http://www.vermicelli.pasta.cs.uit.no/ipv6/software.html
+
+is necessary.  Unfortunately, totd doesn't yet run on Linux, and ptrtd
+doesn't yet run on BSD.  Feico Dillema, the maintainer of totd, is working
+on adding Linux support to totd, but in the meantime, there is a publicly
+available DNS proxy available at 3ffe:2900:f10a::2 that translates the IPv4
+DNS space into fec0:0:0:ffff::/64.
+
+
+REQUIREMENTS:
+
+So far, ptrtd has only been tested on Linux 2.2.x and 2.4.x, although it
+should work BSD and Solaris with minor changes.  Contributions are welcome.
+
+Although ptrtd does not directly use the IPv6 stack in the host system, it
+needs some method of getting IPv6 packets to and from the IPv6 network.
+The tuntap network driver, written by Maxim Krasnyansky, is the only
+implemented interface so far.  Support for the "tun" device needs to be
+compiled into the kernel.  This is provided as a module with most, if not
+all, major Linux distributions that use the Linux 2.4.x kernel.  Users of
+the Linux 2.2.x kernel will need to download the tun package from:
+
+http://vtun.sourceforge.net/tun/
+
+
+INSTALL INSTRUCTIONS:
+
+ptrtd uses the GNU automake and autoconf packages to configure the build
+environment.  It should only be necessary to run "./configure; make" to
+configure and build ptrtd.  Then "make install" will install it.
+
+There are no manpages and no configuration files (yet).  The only file that
+is installed is ptrtd in the sbin directory, usually /usr/local/sbin.
+
+
+USING PTRTD:
+
+When started, ptrtd will create a tap interface and configure it by
+running /sbin/ip several times.  It will set the interface up and route the
+TRT prefix to itself.  After the interface is configured, ptrtd will fork
+itself into the background and return control to the shell.
+
+The prefix used by ptrtd is by default "fec0:0:0:ffff::", which is a
+site-local address.  This can be changed with the "-p" flag.
+
+Connectivity to ptrtd can be tested by pinging any address routed to it,
+and it should respond immediately.  This means that pings are not
+translated and should not be used to test connectivity to IPv4 hosts.
+

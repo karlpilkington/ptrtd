@@ -1,0 +1,14 @@
+AC_INIT(main.c)
+
+AM_INIT_AUTOMAKE(nat64d,1.0)
+
+AM_PROG_LEX
+AC_PROG_YACC
+
+AC_PROG_CC
+AC_PROG_RANLIB
+
+AC_CHECK_HEADERS(linux/if_tun.h)
+
+AM_CONFIG_HEADER(config.h)
+AC_OUTPUT(Makefile)
